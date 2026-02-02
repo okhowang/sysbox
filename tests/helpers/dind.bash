@@ -13,7 +13,12 @@ function get_inner_docker_graphdriver() {
 
 function check_inner_docker_graphdriver() {
 	local syscont=$1
-	local docker_logs=$2
+	local docker_info=$2
 	local expect_graphdriver=$(get_inner_docker_graphdriver)
-	echo "$docker_logs" | egrep "graphdriver.*=$expect_graphdriver|storage-driver=$expect_graphdriver"
+
+	if [[ "$expect_graphdriver" == "overlay2" ]]; then
+		echo "$docker_info" | egrep -i "Storage Driver: (overlay2|overlayfs)"
+	else
+		echo "$docker_info" | egrep -i "Storage Driver: $expect_graphdriver"
+	fi
 }

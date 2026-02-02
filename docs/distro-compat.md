@@ -14,16 +14,18 @@ methods supported, and any other requirements:
 
 | Distro / Release      | Package Install | K8s Install | Build from Source | Min Kernel | Shiftfs Required | Other |
 | --------------------- | :-------------: | :---------: | :---------------: | :--------: | :--------------: | ----- |
-| Ubuntu Bionic (18.04) | ✓               | ✓           | ✓                 | 5.3+       | If kernel < 5.12 | [Kernel upgrade notes](#ubuntu-kernel-upgrade) |
-| Ubuntu Focal  (20.04) | ✓               | ✓           | ✓                 | 5.4+       | If kernel < 5.12 | |
+| Noble Numbat (24.04)  | ✓               | ✓           | ✓                 | 6.8+       | No | |
 | Ubuntu Jammy (22.04)  | ✓               | ✓           | ✓                 | 5.15+      | No (but recommended if kernel < 5.19) | |
-| Debian Buster (10)    | ✓               | WIP         | ✓                 | 5.5+       | If kernel < 5.12 | [Kernel upgrade notes](#debian-kernel-upgrade) |
+| Ubuntu Focal  (20.04) | ✓               | ✓           | ✓                 | 5.4+       | If kernel < 5.12 | |
+| Ubuntu Bionic (18.04) | ✓               | ✓           | ✓                 | 5.3+       | If kernel < 5.12 | [Kernel upgrade notes](#ubuntu-kernel-upgrade) |
 | Debian Bullseye (11)  | ✓               | WIP         | ✓                 | 5.5+       | If kernel < 5.12 | |
+| Debian Buster (10)    | ✓               | WIP         | ✓                 | 5.5+       | If kernel < 5.12 | [Kernel upgrade notes](#debian-kernel-upgrade) |
 | Fedora (34 to 37)     | WIP             | WIP         | ✓                 | 5.12+      | No | |
 | Rocky Linux 8         | WIP             | WIP         | ✓                 | 5.12+      | No | |
 | Alma Linux (8, 9)     | WIP             | WIP         | ✓                 | 5.12+      | No | |
 | CentOS Stream         | WIP             | WIP         | ✓                 | 5.12+      | No | |
 | Amazon Linux 2        | WIP             | WIP         | ✓                 | 5.12+      | No | [Kernel upgrade notes](https://repost.aws/knowledge-center/amazon-linux-2-kernel-upgrade) |
+| Amazon Linux 2023     | WIP             | WIP         | ✓                 | 6.1+       | No | |
 | RedHat Enterprise     | WIP             | WIP         |                   | 5.12+      | No | Sysbox-EE only |
 | Flatcar               | ✓               | ✓           |                   | 5.10+      | If kernel < 5.12  | Sysbox-EE only; see [here](user-guide/install-flatcar.md). |
 

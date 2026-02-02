@@ -1,5 +1,5 @@
 #
-# Sysbox Test Container Dockerfile (Fedora-37 image)
+# Sysbox Test Container Dockerfile (Amazonlinux-2023 image)
 #
 # This Dockerfile creates the sysbox test container image. The image
 # contains all dependencies needed to build, run, and test sysbox.
@@ -19,7 +19,7 @@
 # docker build -t sysbox-test .
 #
 
-FROM fedora:37
+FROM amazonlinux:2023
 
 # Desired platform architecture to build upon.
 ARG sys_arch
@@ -27,9 +27,9 @@ ENV SYS_ARCH=${sys_arch}
 ARG target_arch
 ENV TARGET_ARCH=${target_arch}
 
-ARG k8s_version=v1.20.2
+ARG k8s_version=v1.33.0
 
-RUN dnf update -y && dnf install -y \
+RUN dnf install -y \
     acl \
     yum-utils \
     automake \
@@ -39,9 +39,7 @@ RUN dnf update -y && dnf install -y \
     psmisc \
     nano \
     less \
-    curl \
     sudo \
-    gawk \
     git \
     iptables \
     iproute \
@@ -52,6 +50,8 @@ RUN dnf update -y && dnf install -y \
     libnl3-devel \
     libseccomp \
     libseccomp-devel \
+    libseccomp-static \
+    kernel-headers \
     python3 \
     kmod \
     unzip \
@@ -60,38 +60,23 @@ RUN dnf update -y && dnf install -y \
     wget \
     lsof \
     iputils \
-    ca-certificates \
     bc \
+    hostname \
     # sysbox deps
-    fuse \
+    fuse3 \
     rsync \
-    redhat-lsb-core \
+    glibc-static \
     bash-completion \
     attr \
     tree \
     strace \
-    && echo ". /etc/bash_completion" >> /etc/bash.bashrc \
+    && echo ". /etc/profile.d/bash_completion.sh" >> /etc/.bashrc \
     && ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa \
     && echo "    StrictHostKeyChecking accept-new" >> /etc/ssh/ssh_config
 
-# install cross compile tool chains
-RUN dnf copr enable -y lantw44/aarch64-linux-gnu-toolchain \
-    && dnf copr enable -y lantw44/arm-linux-gnueabi-toolchain \
-    && dnf copr enable -y lantw44/arm-linux-gnueabihf-toolchain \
-    && dnf install -y \
-    arm-linux-gnueabi-gcc \
-    arm-linux-gnueabi-glibc \
-    arm-linux-gnueabi-binutils \
-    arm-linux-gnueabihf-gcc \
-    arm-linux-gnueabihf-glibc \
-    arm-linux-gnueabihf-binutils \
-    aarch64-linux-gnu-gcc \
-    aarch64-linux-gnu-glibc \
-    aarch64-linux-gnu-binutils
-
 # Install Golang
-RUN wget https://go.dev/dl/go1.24.9.linux-${sys_arch}.tar.gz && \
-    tar -C /usr/local -xzf go1.24.9.linux-${sys_arch}.tar.gz && \
+RUN wget https://go.dev/dl/go1.22.6.linux-${sys_arch}.tar.gz && \
+    tar -C /usr/local -xzf go1.22.6.linux-${sys_arch}.tar.gz && \
     /usr/local/go/bin/go env -w GONOSUMDB=/root/nestybox
 
 ENV GOPATH=/go
@@ -119,7 +104,7 @@ RUN if [ "$sys_arch" = "amd64" ] ; then arch_str="x86_64"; \
     && curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v3.15.8/protoc-3.15.8-linux-${arch_str}.zip \
     && unzip protoc-3.15.8-linux-${arch_str}.zip -d $HOME/.local \
     && export PATH="$PATH:$HOME/.local/bin" \
-     && ln -s $HOME/.local/bin/protoc /usr/local/bin/protoc \
+    && ln -s $HOME/.local/bin/protoc /usr/local/bin/protoc \
     && go install github.com/golang/protobuf/protoc-gen-go@latest \
     && export PATH="$PATH:$(go env GOPATH)/bin"
 
@@ -129,30 +114,13 @@ RUN if [ "$sys_arch" = "amd64" ] ; then arch_str="x86_64"; \
 RUN curl -LO https://dl.k8s.io/release/${k8s_version}/bin/linux/${sys_arch}/kubectl \
     && install -o root -g root -m 0755 kubectl /usr/bin/kubectl
 
-# install Docker (used by most sysbox tests to launch sys containers)
-RUN dnf update -y \
-    && dnf config-manager --add-repo=https://download.docker.com/linux/fedora/docker-ce.repo \
-    && dnf install -y docker-ce --nobest
+# Install Docker (used by most sysbox tests to launch sys containers)
+RUN dnf install -y docker
 ADD https://raw.githubusercontent.com/docker/docker-ce/master/components/cli/contrib/completion/bash/docker \
     /etc/bash_completion.d/docker.sh
 
 # Go Dlv for debugging
 RUN go install github.com/go-delve/delve/cmd/dlv@latest
-
-# Use the old definition for SECCOMP_NOTIF_ID_VALID in /usr/include/linux/seccomp.h
-#
-# This is needed because the definition changed in the mainline kernel
-# on 06/2020 (from SECCOMP_IOR -> SECCOMP_IOW), and some distros we
-# support have picked it up in their latest releases / kernels
-# updates. The kernel change was backward compatible, so by using the
-# old definition, we are guaranteed it will work on kernels before and
-# after the change. On the other hand, if we were to use the new
-# definition, seccomp notify would fail when sysbox runs in old
-# kernels.
-RUN sed -i 's/^#define SECCOMP_IOCTL_NOTIF_ID_VALID[ \t]*SECCOMP_IOW(2, __u64)/#define SECCOMP_IOCTL_NOTIF_ID_VALID   SECCOMP_IOR(2, __u64)/g' /usr/include/linux/seccomp.h
-
-# Libc needed to statically compile Sysbox
-RUN dnf update -y && dnf install -y glibc-static
 
 # sysbox env
 RUN useradd sysbox \
@@ -166,4 +134,5 @@ COPY bin/userns_child_exec_${sys_arch} /usr/bin
 
 RUN mkdir -p /root/nestybox
 WORKDIR /root/nestybox/sysbox
-CMD ["/bin/bash"]
+
+CMD /usr/bin/bash

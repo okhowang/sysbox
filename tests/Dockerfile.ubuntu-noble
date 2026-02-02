@@ -1,5 +1,5 @@
 #
-# Sysbox Test Container Dockerfile (Ubuntu-Jammy image)
+# Sysbox Test Container Dockerfile (Ubuntu-Noble image)
 #
 # This Dockerfile creates the sysbox test container image. The image
 # contains all dependencies needed to build, run, and test sysbox.
@@ -19,7 +19,7 @@
 # docker build -t sysbox-test .
 #
 
-FROM ubuntu:jammy
+FROM ubuntu:noble
 
 # K8s version for k8s-in-docker (i.e., this should be equal or greater than the
 # version of K8s running inside the k8s-in-docker container).
@@ -119,7 +119,7 @@ RUN go env -w GONOSUMDB=/root/nestybox && \
 
 # Add a dummy user for the rootless integration tests; needed by the
 # `git clone` operations below.
-RUN useradd -u1000 -m -d/home/rootless -s/bin/bash rootless
+RUN useradd -u2000 -m -d/home/rootless -s/bin/bash rootless
 
 # install bats
 RUN cd /tmp \
@@ -166,11 +166,12 @@ RUN curl -fsSL https://download.opensuse.org/repositories/isv:/cri-o:/stable:/${
     && apt-get install -y cri-o
 
 # Build and install the Nestybox CRI-O (for testing deployment of pods with sysbox (aka "sysbox pods"))
-RUN apt-get update && apt-get install -y --no-install-recommends libgpgme-dev \
+# NOTE: unlike prior Ubuntu distros, requires explicit CGO_LDFLAGS for lgpgme, lpgpg-error, and lassuan when building CRI-O.
+RUN apt-get update && apt-get install -y --no-install-recommends libgpgme-dev libgpg-error-dev libassuan-dev \
     && mkdir -p /tmp/crio-build \
     && git clone https://github.com/nestybox/cri-o.git /tmp/crio-build/cri-o \
     && git -C /tmp/crio-build/cri-o checkout -b ${crio_version}-sysbox origin/${crio_version}-sysbox \
-    && cd /tmp/crio-build/cri-o && make binaries \
+    && export CGO_LDFLAGS="-lgpgme -lgpg-error -lassuan" && cd /tmp/crio-build/cri-o && make binaries \
     && mv /usr/bin/crio /usr/bin/crio.orig \
     && cp /tmp/crio-build/cri-o/bin/crio-static /usr/bin/crio \
     && rm -rf /tmp/crio-build
@@ -184,14 +185,6 @@ RUN curl -fsSL https://pkgs.k8s.io/core:/stable:/${k8s_version}/deb/Release.key 
     && echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/${k8s_version}/deb/ /" | tee /etc/apt/sources.list.d/kubernetes.list \
     && apt-get update \
     && apt-get install kubernetes-cni
-
-# RUN cd /root \
-#     && git clone https://github.com/containernetworking/plugins \
-#     && cd plugins \
-#     && git checkout -b v1.3.0 v1.3.0 \
-#     && ./build_linux.sh \
-#     && mkdir -p /opt/cni/bin \
-#     && cp bin/* /opt/cni/bin/
 
 # Dasel (for yaml, toml, json parsing) (https://github.com/TomWright/dasel)
 # Note: manually download Dasel v1 as our testContainerInit script does not yet support Dasel v2.

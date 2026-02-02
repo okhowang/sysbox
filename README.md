@@ -30,8 +30,8 @@ originally developed by Nestybox ([acquired by Docker][docker-acquisition] on
 *   **Enables containers to run same workloads as VMs**:
 
     *   With Sysbox, containers can run system-level software such as systemd,
-        Docker, Kubernetes, K3s, buildx, legacy apps, and more seamlessly &
-        securely.
+        Docker, Kubernetes, K3s, buildx (including multi-arch builds), legacy
+        apps, multi-arch apps, and more seamlessly & securely.
 
     *   This software can run inside Sysbox containers without modification and
         without using special versions of the software (e.g., rootless
@@ -148,7 +148,7 @@ Sysbox solves problems such as:
 </p>
 
 Sysbox [installs easily](#installation) on Linux hosts (bare-metal, VM, on-prem, cloud, etc.). It
-works on all mayor cloud-based IaaS and Kubernetes services (e.g., EC2, GCP, GKE,
+works on all major cloud-based IaaS and Kubernetes services (e.g., EC2, GCP, GKE,
 EKS, AKS, Rancher, etc.)
 
 Once installed, Sysbox works under the covers: you use Docker, Kubernetes, etc.
