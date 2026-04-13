@@ -1,6 +1,6 @@
 [submodule "sysbox-fs"]
 	path = sysbox-fs
-	url = https://github.com/nestybox/sysbox-fs.git
+	url = ../sysbox-fs.git
 [submodule "sysbox-runc"]
 	path = sysbox-runc
 	url = ../sysbox-runc.git
